@@ -1,30 +1,27 @@
 # Use Case Diagram – UniMetrics
 
-@startuml
+```mermaid
+flowchart LR
 
-actor SuperAdmin
-actor UniversityAdmin
-actor Faculty
-actor Student
+SuperAdmin((Super Admin))
+UniversityAdmin((University Admin))
+Faculty((Faculty))
+Student((Student))
 
-SuperAdmin --> (Register University)
-SuperAdmin --> (Manage Universities)
+RegisterUniversity([Register University])
+ManageDepartments([Manage Departments])
+UploadScores([Upload Exam Scores])
+ViewAnalytics([View Institutional Analytics])
+ViewPerformance([View Performance])
+EvaluateRisk([Evaluate Risk])
+GenerateAlert([Generate Alert])
 
-UniversityAdmin --> (Manage Departments)
-UniversityAdmin --> (Manage Users)
-UniversityAdmin --> (View Institutional Analytics)
+SuperAdmin --> RegisterUniversity
+UniversityAdmin --> ManageDepartments
+Faculty --> UploadScores
+UniversityAdmin --> ViewAnalytics
+Student --> ViewPerformance
 
-Faculty --> (Upload Exam Scores)
-Faculty --> (View Class Analytics)
-Faculty --> (View Risk Alerts)
-
-Student --> (View Performance)
-Student --> (View Risk Status)
-Student --> (View Attendance)
-
-(Upload Exam Scores) --> (Analyze Performance)
-(Analyze Performance) --> (Calculate CGPA)
-(Calculate CGPA) --> (Evaluate Risk)
-(Evaluate Risk) --> (Generate Alert)
-
-@enduml
+UploadScores --> EvaluateRisk
+EvaluateRisk --> GenerateAlert
+```
