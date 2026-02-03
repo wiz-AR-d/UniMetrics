@@ -1,0 +1,94 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model University {
+  id          Int          @id @default(autoincrement())
+  name        String
+  address     String
+  users       User[]
+  departments Department[]
+  exams       Exam[]
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+}
+
+model User {
+  id           Int           @id @default(autoincrement())
+  name         String
+  email        String        @unique
+  password     String
+  role         String        // 'SUPER_ADMIN', 'UNIVERSITY_ADMIN', 'FACULTY', 'STUDENT'
+  universityId Int
+  university   University    @relation(fields: [universityId], references: [id])
+  grades       Grade[]
+  attendances  Attendance[]
+  riskProfile  RiskProfile?
+  alerts       Alert[]
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+}
+
+model Department {
+  id           Int        @id @default(autoincrement())
+  name         String
+  universityId Int
+  university   University @relation(fields: [universityId], references: [id])
+  courses      Course[]
+}
+
+model Course {
+  id           Int        @id @default(autoincrement())
+  name         String
+  departmentId Int
+  department   Department @relation(fields: [departmentId], references: [id])
+  grades       Grade[]
+}
+
+model Exam {
+  id           Int        @id @default(autoincrement())
+  semester     Int
+  universityId Int
+  university   University @relation(fields: [universityId], references: [id])
+  grades       Grade[]
+}
+
+model Grade {
+  id       Int    @id @default(autoincrement())
+  marks    Float
+  userId   Int
+  user     User   @relation(fields: [userId], references: [id])
+  courseId Int
+  course   Course @relation(fields: [courseId], references: [id])
+  examId   Int
+  exam     Exam   @relation(fields: [examId], references: [id])
+}
+
+model Attendance {
+  id         Int   @id @default(autoincrement())
+  percentage Float
+  userId     Int
+  user       User  @relation(fields: [userId], references: [id])
+}
+
+model RiskProfile {
+  id        Int    @id @default(autoincrement())
+  riskScore Float
+  riskLevel String // 'LOW', 'MEDIUM', 'HIGH'
+  userId    Int    @unique
+  user      User   @relation(fields: [userId], references: [id])
+}
+
+model Alert {
+  id        Int      @id @default(autoincrement())
+  message   String
+  isRead    Boolean  @default(false)
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id])
+  createdAt DateTime @default(now())
+}
