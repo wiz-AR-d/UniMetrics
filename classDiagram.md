@@ -49,10 +49,7 @@ class Grade {
   +marks: number
 }
 
-class Attendance {
-  +id: number
-  +percentage: number
-}
+
 
 class RiskProfile {
   +id: number

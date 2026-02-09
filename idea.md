@@ -26,7 +26,6 @@ It enables multiple universities to register on the platform and independently m
 - Students
 - Faculty
 - Exams
-- Attendance
 - Grades
 - Risk profiles
 
@@ -34,7 +33,6 @@ The system analyzes academic data to:
 
 - Compute CGPA
 - Detect backlog risks
-- Identify low attendance risks
 - Predict academic probation
 - Generate alerts
 - Provide institutional analytics dashboards
@@ -73,7 +71,6 @@ This ensures strict tenant isolation.
 
 ### 2️⃣ Risk Detection Engine
 - Low CGPA risk detection
-- Low attendance risk detection
 - Repeated backlog risk
 - Academic probation alerts
 
@@ -118,7 +115,7 @@ Backend:
 - Node.js
 - Express.js
 - TypeScript
-- PostgreSQL
+- SQLite
 - Prisma ORM
 
 Frontend:

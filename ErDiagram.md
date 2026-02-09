@@ -8,7 +8,7 @@ University ||--o{ Department : contains
 Department ||--o{ Course : offers
 University ||--o{ Exam : conducts
 User ||--o{ Grade : receives
-User ||--o{ Attendance : has
+
 User ||--|| RiskProfile : owns
 User ||--o{ Alert : generates
 
@@ -50,10 +50,7 @@ Grade {
   float marks
 }
 
-Attendance {
-  int id
-  float percentage
-}
+
 
 RiskProfile {
   int id
