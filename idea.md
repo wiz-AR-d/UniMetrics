@@ -115,7 +115,7 @@ Backend:
 - Node.js
 - Express.js
 - TypeScript
-- SQLite
+- PostgreSQL
 - Prisma ORM
 
 Frontend:
