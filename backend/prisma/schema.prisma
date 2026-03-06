@@ -19,19 +19,18 @@ model University {
 }
 
 model User {
-  id           Int           @id @default(autoincrement())
+  id           Int          @id @default(autoincrement())
   name         String
-  email        String        @unique
+  email        String       @unique
   password     String
-  role         String        // 'SUPER_ADMIN', 'UNIVERSITY_ADMIN', 'FACULTY', 'STUDENT'
+  role         String       // 'SUPER_ADMIN', 'UNIVERSITY_ADMIN', 'FACULTY', 'STUDENT'
   universityId Int
-  university   University    @relation(fields: [universityId], references: [id])
+  university   University   @relation(fields: [universityId], references: [id])
   grades       Grade[]
-  attendances  Attendance[]
   riskProfile  RiskProfile?
   alerts       Alert[]
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
 }
 
 model Department {
@@ -43,11 +42,12 @@ model Department {
 }
 
 model Course {
-  id           Int        @id @default(autoincrement())
-  name         String
-  departmentId Int
-  department   Department @relation(fields: [departmentId], references: [id])
-  grades       Grade[]
+  id               Int        @id @default(autoincrement())
+  name             String
+  totalAssignments Int        @default(10)
+  departmentId     Int
+  department       Department @relation(fields: [departmentId], references: [id])
+  grades           Grade[]
 }
 
 model Exam {
@@ -59,36 +59,37 @@ model Exam {
 }
 
 model Grade {
-  id       Int    @id @default(autoincrement())
-  marks    Float
+  id                   Int    @id @default(autoincrement())
+  marks                Float  @default(0)
+  quizScore            Float  @default(0)
+  labScore             Float  @default(0)
+  assignmentsCompleted Int    @default(0)
+  attendancePercent    Float  @default(0)
+
   userId   Int
-  user     User   @relation(fields: [userId], references: [id])
+  user     User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   courseId Int
   course   Course @relation(fields: [courseId], references: [id])
   examId   Int
   exam     Exam   @relation(fields: [examId], references: [id])
-}
 
-model Attendance {
-  id         Int   @id @default(autoincrement())
-  percentage Float
-  userId     Int
-  user       User  @relation(fields: [userId], references: [id])
+  @@unique([userId, courseId, examId])
 }
 
 model RiskProfile {
   id        Int    @id @default(autoincrement())
-  riskScore Float
-  riskLevel String // 'LOW', 'MEDIUM', 'HIGH'
+  riskScore Float  @default(0)
+  riskLevel String @default("LOW") // 'LOW', 'MEDIUM', 'HIGH'
   userId    Int    @unique
-  user      User   @relation(fields: [userId], references: [id])
+  user      User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Alert {
   id        Int      @id @default(autoincrement())
   message   String
   isRead    Boolean  @default(false)
+  severity  String   @default("LOW") // 'LOW', 'MEDIUM', 'HIGH'
   userId    Int
-  user      User     @relation(fields: [userId], references: [id])
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now())
 }
