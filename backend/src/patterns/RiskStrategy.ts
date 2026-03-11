@@ -1,44 +1,81 @@
 import { db } from './SingletonDatabase';
 
 // Strategy Interface
-export interface RiskCalculationStrategy {
-  calculateRisk(userId: number): Promise<{ score: number; level: string }>;
+interface RiskStrategy {
+  evaluate(grades: GradeWithCourse[]): { score: number; level: string };
 }
 
-// Concrete Strategy 1: Low Grades Risk
-export class LowGradeRiskStrategy implements RiskCalculationStrategy {
-  async calculateRisk(userId: number): Promise<{ score: number; level: string }> {
-    const grades = await db.grade.findMany({ where: { userId } });
+interface GradeWithCourse {
+  marks: number;
+  quizScore: number;
+  labScore: number;
+  assignmentsCompleted: number;
+  attendancePercent: number;
+  course: { totalAssignments: number };
+}
+
+// Multi-Factor Strategy (35% exam, 20% assignments, 15% quiz, 15% lab, 15% attendance)
+export class MultiFactorRiskStrategy implements RiskStrategy {
+  evaluate(grades: GradeWithCourse[]): { score: number; level: string } {
     if (grades.length === 0) return { score: 0, level: 'LOW' };
 
-    const average = grades.reduce((acc, curr) => acc + curr.marks, 0) / grades.length;
-    
-    let score = 0;
-    if (average < 40) score = 80;
-    else if (average < 60) score = 50;
-    else score = 10;
-
-    let level = 'LOW';
-    if (score >= 80) level = 'HIGH';
-    else if (score >= 50) level = 'MEDIUM';
-
+    let totalComposite = 0;
+    for (const g of grades) {
+      const assignRate = g.course.totalAssignments > 0
+        ? (g.assignmentsCompleted / g.course.totalAssignments) * 100
+        : 0;
+      const composite =
+        g.marks            * 0.35 +
+        g.quizScore        * 0.15 +
+        g.labScore         * 0.15 +
+        assignRate         * 0.20 +
+        g.attendancePercent * 0.15;
+      totalComposite += composite;
+    }
+    const avg = totalComposite / grades.length;
+    const score = Math.round(avg * 10) / 10;
+    const level = avg >= 70 ? 'LOW' : avg >= 50 ? 'MEDIUM' : 'HIGH';
     return { score, level };
   }
 }
 
-// Strategy Context Engine
+// Risk Engine (Context)
 export class RiskEngine {
-  private strategy: RiskCalculationStrategy;
+  private strategy: RiskStrategy;
 
-  constructor(strategy: RiskCalculationStrategy) {
+  constructor(strategy: RiskStrategy) {
     this.strategy = strategy;
   }
 
-  setStrategy(strategy: RiskCalculationStrategy) {
-    this.strategy = strategy;
-  }
+  async evaluateRisk(userId: number): Promise<{ score: number; level: string; breakdown: any[] }> {
+    const grades = await db.grade.findMany({
+      where: { userId },
+      include: { course: true }
+    });
 
-  async evaluateRisk(userId: number) {
-    return await this.strategy.calculateRisk(userId);
+    const result = this.strategy.evaluate(grades);
+
+    // Compute per-subject breakdown for drilldown
+    const breakdown = grades.map(g => {
+      const assignRate = g.course.totalAssignments > 0
+        ? Math.round((g.assignmentsCompleted / g.course.totalAssignments) * 100)
+        : 0;
+      const composite = Math.round(
+        g.marks * 0.35 + g.quizScore * 0.15 + g.labScore * 0.15 +
+        assignRate * 0.20 + g.attendancePercent * 0.15
+      );
+      return {
+        subject: g.course.name,
+        marks: g.marks,
+        quizScore: g.quizScore,
+        labScore: g.labScore,
+        assignmentsCompleted: g.assignmentsCompleted,
+        totalAssignments: g.course.totalAssignments,
+        attendancePercent: g.attendancePercent,
+        composite
+      };
+    });
+
+    return { ...result, breakdown };
   }
 }
