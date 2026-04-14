@@ -26,21 +26,25 @@ export class PerformanceService {
     });
 
     // 2. Evaluate risk across ALL subjects using MultiFactor Strategy
+    return await this.recalculateRiskForUser(userId);
+  }
+
+  public static async recalculateRiskForUser(userId: number) {
     const engine = new RiskEngine(new MultiFactorRiskStrategy());
     const riskAssessment = await engine.evaluateRisk(userId);
 
-    // 3. Get previous risk level to detect worsening
+    // Get previous risk level to detect worsening
     const previousProfile = await db.riskProfile.findUnique({ where: { userId } });
     const previousLevel = previousProfile?.riskLevel ?? 'LOW';
 
-    // 4. Update or create Risk Profile
+    // Update or create Risk Profile
     await db.riskProfile.upsert({
       where: { userId },
       update: { riskScore: riskAssessment.score, riskLevel: riskAssessment.level },
       create: { userId, riskScore: riskAssessment.score, riskLevel: riskAssessment.level }
     });
 
-    // 5. Trigger alert only if risk level has worsened or is HIGH/MEDIUM
+    // Trigger alert only if risk level has worsened or is HIGH/MEDIUM
     const levelOrder: Record<string, number> = { LOW: 0, MEDIUM: 1, HIGH: 2 };
     const hasWorsened = levelOrder[riskAssessment.level] > levelOrder[previousLevel];
     if (hasWorsened || riskAssessment.level === 'HIGH') {
@@ -50,3 +54,4 @@ export class PerformanceService {
     return riskAssessment;
   }
 }
+

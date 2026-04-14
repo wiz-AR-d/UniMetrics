@@ -140,6 +140,16 @@ export class PerformanceController {
         where: { id: Number(id) },
         data: { totalAssignments: Number(totalAssignments) }
       });
+      
+      // Look up all students who have grades for this course
+      const grades = await db.grade.findMany({ where: { courseId: Number(id) } });
+      const userIds = Array.from(new Set(grades.map(g => g.userId)));
+      
+      // Recalculate and update the RiskProfile for all enrolled students
+      for (const uid of userIds) {
+        await PerformanceService.recalculateRiskForUser(uid);
+      }
+
       res.status(200).json({ success: true, course, message: `Total assignments for ${course.name} updated to ${course.totalAssignments} for all students` });
     } catch (err: any) {
       res.status(500).json({ success: false, error: err.message });
