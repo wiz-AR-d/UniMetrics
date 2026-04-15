@@ -20,6 +20,22 @@ app.post('/api/auth/login',  AuthController.login);
 app.get('/api/auth/google',          GoogleAuthController.redirect);
 app.get('/api/auth/google/callback', GoogleAuthController.callback);
 
+// Remote Seed Endpoint
+app.get('/api/seed', async (req, res) => {
+  try {
+    const { exec } = require('child_process');
+    exec('npx tsx seed.ts', (error: any, stdout: any, stderr: any) => {
+      if (error) {
+         console.error(`exec error: ${error}`);
+         return res.status(500).json({ error: error.message });
+      }
+      res.status(200).json({ success: true, message: 'Database successfully seeded!', stdout });
+    });
+  } catch(e: any) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 // ─── Protected Routes ────────────────────────────────
 const auth = authMiddleware as any;
 
