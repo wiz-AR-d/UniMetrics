@@ -36,6 +36,7 @@ export default function Dashboard() {
   const [stats, setStats] = useState<Stats | null>(null);
   const [alerts, setAlerts] = useState<Alert[]>([]);
   const [students, setStudents] = useState<Student[]>([]);
+  const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
 
   const headers = { Authorization: `Bearer ${token}` };
@@ -66,7 +67,13 @@ export default function Dashboard() {
   if (loading) return <div className="loading-screen"><div className="loader" /></div>;
 
   const unreadCount = alerts.filter(a => !a.isRead).length;
-  const topRisk = [...students]
+
+  const filteredStudents = students.filter(s => 
+    s.name.toLowerCase().includes(search.toLowerCase()) || 
+    (s.email && s.email.toLowerCase().includes(search.toLowerCase()))
+  );
+
+  const topRisk = [...filteredStudents]
     .sort((a, b) => (a.riskProfile?.riskScore ?? 100) - (b.riskProfile?.riskScore ?? 100))
     .slice(0, 5);
 
@@ -78,7 +85,12 @@ export default function Dashboard() {
         <header className="topbar glass-panel">
           <div className="search-bar">
             <Search size={20} className="search-icon" />
-            <input type="text" placeholder="Search students, courses..." />
+            <input 
+              type="text" 
+              placeholder="Search students..." 
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
           </div>
           <div className="topbar-actions">
             <button className="icon-button notification-btn" onClick={() => navigate('/notifications')}>
